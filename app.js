@@ -35,6 +35,16 @@ app.post("/shorten", async (req, res) => {
   const short_code = generateShortCode();
 
   try {
+    const existingUrl = await prisma.url.findUnique({
+      where: {
+        originalUrl: original_url,
+      },
+    });
+
+    if (existingUrl) {
+      return res.status(200).json({ short_code: existingUrl.shortCode });
+    }
+
     await prisma.url.create({
       data: {
         originalUrl: original_url,

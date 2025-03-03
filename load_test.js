@@ -1,12 +1,6 @@
 import http from "k6/http";
 import { check } from "k6";
-
-export function generateRandomUrl() {
-  const domains = ["com", "org", "net", "io", "gov"];
-  const randomDomain = domains[Math.floor(Math.random() * domains.length)];
-  const randomSubdomain = Math.random().toString(36).substring(2, 8);
-  return `https://${randomSubdomain}.${randomDomain}`;
-}
+import { generateRandomUrl } from "./util";
 
 export let options = {
   scenarios: {
