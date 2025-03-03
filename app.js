@@ -25,7 +25,7 @@ app.get("/", (req, res) => {
 app.post("/shorten", (req, res) => {
   const { original_url } = req.body;
 
-  if (!long_url) {
+  if (!original_url) {
     return res.status(400).json({ error: "Long URL is required" });
   }
 
