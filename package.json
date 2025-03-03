@@ -13,16 +13,19 @@
   "license": "ISC",
   "packageManager": "pnpm@10.5.2",
   "dependencies": {
+    "@prisma/client": "^6.4.1",
     "express": "^4.21.2",
     "sqlite3": "^5.1.7"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@prisma/client",
       "sqlite3"
     ]
   },
   "devDependencies": {
     "jest": "^29.7.0",
+    "prisma": "^6.4.1",
     "supertest": "^7.0.0"
   }
 }

@@ -1,7 +1,7 @@
 import http from "k6/http";
 import { check } from "k6";
 
-function generateRandomUrl() {
+export function generateRandomUrl() {
   const domains = ["com", "org", "net", "io", "gov"];
   const randomDomain = domains[Math.floor(Math.random() * domains.length)];
   const randomSubdomain = Math.random().toString(36).substring(2, 8);
@@ -12,9 +12,9 @@ export let options = {
   scenarios: {
     shared_iterations_scenario: {
       executor: "shared-iterations",
-      vus: 10,
-      iterations: 10,
-      maxDuration: "30s",
+      vus: 200,
+      iterations: 200,
+      //   maxDuration: "30s",
     },
   },
 };

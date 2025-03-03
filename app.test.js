@@ -20,6 +20,6 @@ describe("Url Shortener API Tests", () => {
     );
 
     expect(redirectRouteResponse.status).toBe(302);
-    expect(redirectRouteResponse.headers.location).toBe(longUrl);
+    expect(redirectRouteResponse.headers.location).toBe(originalUrl);
   });
 });

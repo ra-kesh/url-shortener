@@ -1,9 +1,12 @@
 import express from "express";
 import sqlite3 from "sqlite3";
 import crypto from "crypto";
+import { PrismaClient } from "@prisma/client";
 
 const app = express();
 app.use(express.json());
+
+const prisma = new PrismaClient();
 
 const db = new sqlite3.Database("urls.db", () => {
   db.run(`CREATE TABLE IF NOT EXISTS urls(
@@ -22,7 +25,7 @@ app.get("/", (req, res) => {
   res.send("Url Shortener Running");
 });
 
-app.post("/shorten", (req, res) => {
+app.post("/shorten", async (req, res) => {
   const { original_url } = req.body;
 
   if (!original_url) {
@@ -31,30 +34,38 @@ app.post("/shorten", (req, res) => {
 
   const short_code = generateShortCode();
 
-  const sql = "INSERT INTO urls (short_code,original_url) VALUES(?,?)";
+  try {
+    await prisma.url.create({
+      data: {
+        originalUrl: original_url,
+        shortCode: short_code,
+      },
+    });
 
-  db.run(sql, [short_code, original_url], function () {
     res.status(201).json({ short_code });
-  });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
-app.get("/redirect", (req, res) => {
+app.get("/redirect", async (req, res) => {
   const { code } = req.query;
 
-  const sql = "SELECT original_url FROM urls WHERE short_code=?";
+  try {
+    const url = await prisma.url.findUnique({
+      where: {
+        shortCode: code,
+      },
+    });
 
-  db.get(sql, [code], (err, row) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).send("An error occurred while retrieving the URL");
-    }
-
-    if (!row) {
+    if (!url) {
       return res.status(404).send("Short URL not found");
     }
 
-    res.redirect(row.original_url);
-  });
+    res.redirect(url.originalUrl);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 export default app;
