@@ -44,4 +44,9 @@ describe("Url Shortener API Tests", () => {
     expect(shortenRouteResponse2.status).toBe(200);
     expect(shortenRouteResponse2.body.short_code).toBe(shortCode1);
   });
+
+  it("should return 404 for non-existent short code", async () => {
+    const response = await request(app).get("/redirect?code=nonexistent");
+    expect(response.status).toBe(404);
+  });
 });

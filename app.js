@@ -61,6 +61,10 @@ app.post("/shorten", async (req, res) => {
 app.get("/redirect", async (req, res) => {
   const { code } = req.query;
 
+  if (!code) {
+    return res.status(400).json({ error: "Short code is required" });
+  }
+
   try {
     const url = await prisma.url.findUnique({
       where: {
