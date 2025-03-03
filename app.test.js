@@ -49,4 +49,27 @@ describe("Url Shortener API Tests", () => {
     const response = await request(app).get("/redirect?code=nonexistent");
     expect(response.status).toBe(404);
   });
+
+  it("shoud delete a short code successfully", async () => {
+    const originalUrl = generateRandomUrl();
+
+    const shortenRouteResponse = await request(app)
+      .post("/shorten")
+      .send({ original_url: originalUrl })
+      .set("Accept", "application/json");
+
+    expect(shortenRouteResponse.status).toBe(201);
+    expect(shortenRouteResponse.body.short_code).toBeDefined();
+
+    const shortCode = shortenRouteResponse.body.short_code;
+    const deleteRouteResponse = await request(app).delete(
+      `/delete?code=${shortCode}`
+    );
+    expect(deleteRouteResponse.status).toBe(204);
+
+    const redirectRouteResponse = await request(app).get(
+      `/redirect?code=${shortCode}`
+    );
+    expect(redirectRouteResponse.status).toBe(404);
+  });
 });

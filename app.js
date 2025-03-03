@@ -82,4 +82,28 @@ app.get("/redirect", async (req, res) => {
   }
 });
 
+app.delete("/delete", async (req, res) => {
+  const { code } = req.query;
+
+  if (!code) {
+    return res.status(400).json({ error: "Short code is required" });
+  }
+
+  try {
+    const deletedUrl = await prisma.url.delete({
+      where: {
+        shortCode: code,
+      },
+    });
+
+    if (!deletedUrl) {
+      return res.status(404).send("Short code not found");
+    }
+
+    res.status(204).send("URL deleted successfully");
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default app;
