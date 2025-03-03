@@ -4,11 +4,11 @@ import app from "./app";
 describe("Url Shortener API Tests", () => {
   it("should shorten a url and redirect", async () => {
     let shortCode;
-    const longUrl = "https://example.com";
+    const originalUrl = "https://example.com";
 
     const shortenRouteResponse = await request(app)
       .post("/shorten")
-      .send({ original_url: longUrl })
+      .send({ original_url: originalUrl })
       .set("Accept", "application/json");
 
     expect(shortenRouteResponse.status).toBe(201);
