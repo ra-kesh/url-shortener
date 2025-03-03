@@ -19,7 +19,7 @@ function generateShortCode() {
 }
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("Url Shortener Running");
 });
 
 app.post("/shorten", (req, res) => {
@@ -57,7 +57,4 @@ app.get("/redirect", (req, res) => {
   });
 });
 
-const PORT = 3000;
-app.listen(PORT, () =>
-  console.log(`Server running on http://localhost:${PORT}`)
-);
+export default app;
