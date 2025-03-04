@@ -50,6 +50,11 @@ describe("Url Shortener API Tests", () => {
     expect(response.status).toBe(404);
   });
 
+  it("should return 400 for missing original URL", async () => {
+    const response = await request(app).post("/shorten").send({});
+    expect(response.status).toBe(400);
+  });
+
   it("shoud delete a short code successfully", async () => {
     const originalUrl = generateRandomUrl();
 
