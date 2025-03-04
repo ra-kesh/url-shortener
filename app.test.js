@@ -1,6 +1,25 @@
 import request from "supertest";
 import app from "./app.js";
 import { generateRandomUrl } from "./util.js";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+// Setup and teardown hooks
+beforeAll(async () => {
+  // Connect to the database
+  await prisma.$connect();
+});
+
+afterAll(async () => {
+  // Disconnect from the database
+  await prisma.$disconnect();
+});
+
+beforeEach(async () => {
+  // Clean up the database before each test
+  await prisma.url.deleteMany({});
+});
 
 describe("Url Shortener API Tests", () => {
   it("should shorten a url and redirect", async () => {

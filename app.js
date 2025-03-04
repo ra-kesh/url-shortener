@@ -1,5 +1,4 @@
 import express from "express";
-import sqlite3 from "sqlite3";
 import crypto from "crypto";
 import { PrismaClient } from "@prisma/client";
 
@@ -7,15 +6,6 @@ const app = express();
 app.use(express.json());
 
 const prisma = new PrismaClient();
-
-const db = new sqlite3.Database("urls.db", () => {
-  db.run(`CREATE TABLE IF NOT EXISTS urls(
-        id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        original_url TEXT NOT NULL, 
-        short_code VARCHAR (10) UNIQUE NOT NULL, 
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`);
-});
 
 function generateShortCode() {
   return crypto.randomBytes(3).toString("hex");
