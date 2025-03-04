@@ -11,14 +11,6 @@ export class UrlController {
     }
 
     try {
-      const existingUrl = await UrlService.findByOriginalUrl(original_url);
-
-      if (existingUrl) {
-        return res.status(200).json({
-          short_code: existingUrl.shortCode,
-        });
-      }
-
       const newUrl = await UrlService.create(original_url);
       return res.status(201).json({
         short_code: newUrl.shortCode,
