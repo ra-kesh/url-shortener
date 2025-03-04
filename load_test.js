@@ -1,13 +1,15 @@
 import http from "k6/http";
 import { check } from "k6";
-import { generateRandomUrl } from "./util";
+import { generateRandomUrl } from "./util.js";
+
+const baseUrl = `https://url-shortener-y95b.onrender.com`;
 
 export let options = {
   scenarios: {
     shared_iterations_scenario: {
       executor: "shared-iterations",
-      vus: 200,
-      iterations: 200,
+      vus: 300,
+      iterations: 300,
       //   maxDuration: "30s",
     },
   },
@@ -16,7 +18,7 @@ export let options = {
 export default function () {
   let originalUrl = generateRandomUrl();
   let shortenRouteResponse = http.post(
-    "http://localhost:3000/shorten",
+    `${baseUrl}/shorten`,
     JSON.stringify({ original_url: originalUrl }),
     { headers: { "Content-Type": "application/json" } }
   );
@@ -29,7 +31,7 @@ export default function () {
   let shortCode = shortenRouteResponse.json().short_code;
   // In load_test.js, modify the http.get call:
   let redirectRouteResponse = http.get(
-    `http://localhost:3000/redirect?code=${shortCode}`,
+    `${baseUrl}/redirect?code=${shortCode}`,
     { redirects: 0 } // Prevent following redirects
   );
 
