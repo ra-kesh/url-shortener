@@ -11,7 +11,7 @@ export class UrlController {
     }
 
     try {
-      const existingUrl = await UrlService.findByOriginaurl(original_url);
+      const existingUrl = await UrlService.findByOriginalUrl(original_url);
 
       if (existingUrl) {
         return res.status(200).json({
@@ -20,7 +20,7 @@ export class UrlController {
       }
 
       const newUrl = await UrlService.create(original_url);
-      return res.status(200).json({
+      return res.status(201).json({
         short_code: newUrl.shortCode,
       });
     } catch (error) {
@@ -40,7 +40,7 @@ export class UrlController {
     }
 
     try {
-      const url = await UrlService.findByshortCode(code);
+      const url = await UrlService.findByShortCode(code);
 
       if (!url) {
         return res.status(404).send("No Original Urls could be found");

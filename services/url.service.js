@@ -12,19 +12,19 @@ const adapter = new PrismaLibSQL(libsql);
 const prisma = new PrismaClient({ adapter });
 
 export class UrlService {
-  static generatorShortCode() {
+  static generateShortCode() {
     return crypto.randomBytes(3).toString("hex");
   }
 
-  static async findByOriginaurl(opriginalUrl) {
+  static async findByOriginalUrl(originalUrl) {
     return await prisma.url.findUnique({
       where: {
-        originalUrl: opriginalUrl,
+        originalUrl: originalUrl,
       },
     });
   }
 
-  static async findByshortCode(shortCode) {
+  static async findByShortCode(shortCode) {
     return await prisma.url.findUnique({
       where: {
         shortCode: shortCode,
@@ -33,7 +33,7 @@ export class UrlService {
   }
 
   static async create(originalUrl) {
-    const shortCode = this.generatorShortCode();
+    const shortCode = this.generateShortCode();
     return await prisma.url.create({
       data: {
         originalUrl: originalUrl,
