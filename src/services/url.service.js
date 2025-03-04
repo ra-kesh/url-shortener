@@ -49,4 +49,18 @@ export class UrlService {
       },
     });
   }
+
+  static async updateClickCount(shortCode) {
+    return await prisma.url.update({
+      where: {
+        shortCode: shortCode,
+      },
+      data: {
+        clickCount: {
+          increment: 1,
+        },
+        lastClicked: new Date(),
+      },
+    });
+  }
 }

@@ -6,7 +6,7 @@ export class UrlController {
 
     if (!original_url) {
       return res.status(400).json({
-        error: "Original URL is required",
+        error: "No original url could be found",
       });
     }
 
@@ -35,7 +35,7 @@ export class UrlController {
 
     if (!code) {
       return res.status(400).json({
-        error: "Short code is required",
+        error: "No short code could be found",
       });
     }
 
@@ -45,6 +45,8 @@ export class UrlController {
       if (!url) {
         return res.status(404).send("No Original Urls could be found");
       }
+
+      await UrlService.updateClickCount(code);
 
       res.redirect(url.originalUrl);
     } catch (error) {
