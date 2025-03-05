@@ -108,4 +108,25 @@ describe("Url Shortener API Tests", () => {
     );
     expect(redirectRouteResponse.status).toBe(404);
   });
+
+  it("should return 403 for unauthorized delete request", async () => {
+    const originalUrl = generateRandomUrl();
+
+    const shortenRouteResponse = await request(app)
+      .post("/shorten")
+      .send({ original_url: originalUrl })
+      .set("Accept", "application/json");
+    expect(shortenRouteResponse.status).toBe(201);
+    expect(shortenRouteResponse.body.short_code).toBeDefined();
+
+    const shortCode = shortenRouteResponse.body.short_code;
+    const deleteRouteResponse = await request(app)
+      .delete(`/delete?code=${shortCode}`)
+      .set("Authorization", "Bearer invalid-api-key");
+    expect(deleteRouteResponse.status).toBe(403);
+    expect(deleteRouteResponse.body.error).toBe(
+      "You do not have permission to delete this URL"
+    );
+    expect(deleteRouteResponse.body).toBeDefined();
+  });
 });
