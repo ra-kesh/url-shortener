@@ -50,27 +50,8 @@ describe("Url Shortener API Tests", () => {
       },
     });
 
-    console.log("Created test user:", {
-      id: testUser.id,
-      name: testUser.name,
-      email: testUser.email,
-      apiKey: testUser.apiKey,
-    });
-
     const userCount = await prisma.user.count();
-    console.log("User count after creation:", userCount);
     expect(userCount).toBe(1);
-
-    // Verify we can find the user by API key directly
-    const foundUser = await prisma.user.findUnique({
-      where: { apiKey: "test-api-key" },
-    });
-    console.log(
-      "User found by API key directly:",
-      foundUser
-        ? { id: foundUser.id, name: foundUser.name, apiKey: foundUser.apiKey }
-        : "Not found"
-    );
 
     const shortenRouteResponse = await request(app)
       .post("/shorten")
@@ -80,21 +61,15 @@ describe("Url Shortener API Tests", () => {
         Accept: "application/json",
       });
 
-    console.log("API response status:", shortenRouteResponse.status);
-    console.log("API response body:", shortenRouteResponse.body);
-
     expect(shortenRouteResponse.status).toBe(201);
     const shortCode = shortenRouteResponse.body.short_code;
     expect(shortCode).toBeDefined();
-    console.log("Extracted shortCode:", shortCode);
 
     const url = await prisma.url.findUnique({
       where: {
         shortCode: shortCode,
       },
     });
-
-    console.log("URL retrieved from database:", url);
 
     expect(url).toBeDefined();
     expect(url).not.toBeNull();
