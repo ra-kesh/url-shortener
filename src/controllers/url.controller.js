@@ -10,20 +10,25 @@ export class UrlController {
       });
     }
 
-    let apiKey = req.headers["api-key"] || req.headers.authorization;
+    let apiKey = req.headers["api-key"] || req.headers["x-api-key"] || req.body.apiKey || req.headers.authorization;
     console.log("API Key received:", apiKey);
 
     if (apiKey?.startsWith("Bearer ")) {
       apiKey = apiKey.split(" ")[1];
+      console.log("API Key after Bearer prefix removal:", apiKey);
     }
 
     try {
       let user = null;
       if (apiKey !== undefined) {
+        console.log("Looking up user with API key:", apiKey);
         user = await UrlService.findUserByApiKey(apiKey);
+        console.log("User lookup result:", user ? `Found user with ID ${user.id}` : "No user found");
       }
 
-      const newUrl = await UrlService.create(original_url, user.id ?? null);
+      const userId = user ? user.id : null;
+      console.log("Creating URL with userId:", userId);
+      const newUrl = await UrlService.create(original_url, userId);
 
       return res.status(201).json({
         short_code: newUrl.shortCode,
