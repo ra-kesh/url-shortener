@@ -33,6 +33,15 @@ export class UrlService {
     return apiKey?.startsWith("Bearer ") ? apiKey.split(" ")[1] : apiKey;
   }
 
+  static isValidUrl(url) {
+    try {
+      const url = new URL(url);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch (error) {
+      return false;
+    }
+  }
+
   static async findByOriginalUrl(originalUrl) {
     return await prisma.url.findUnique({
       where: {

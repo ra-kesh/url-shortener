@@ -150,4 +150,83 @@ describe("Url Shortener API Tests", () => {
     expect(redirectRouteResponse.status).toBe(410);
     expect(redirectRouteResponse.text).toBe("URL has expired");
   });
+
+  it("should batch shorten multiple URLs", async () => {
+    const originalUrls = [generateRandomUrl(), generateRandomUrl()];
+
+    const shortenRouteResponse = await request(app)
+      .post("/batch-shorten")
+      .send({ urls: originalUrls.map((url) => ({ original_url: url })) })
+      .set("Accept", "application/json");
+
+    expect(shortenRouteResponse.status).toBe(201);
+    expect(shortenRouteResponse.body.urls).toBeDefined();
+    expect(shortenRouteResponse.body.urls.length).toBe(2);
+    expect(shortenRouteResponse.body.urls[0].short_code).toBeDefined();
+    expect(shortenRouteResponse.body.urls[1].short_code).toBeDefined();
+    expect(shortenRouteResponse.body.urls[0].original_url).toBe(
+      originalUrls[0]
+    );
+    expect(shortenRouteResponse.body.urls[1].original_url).toBe(
+      originalUrls[1]
+    );
+    expect(shortenRouteResponse.body.urls[0].short_code).not.toBe(
+      shortenRouteResponse.body.urls[1].short_code
+    );
+    expect(shortenRouteResponse.body.urls[0].short_code).not.toBe(
+      originalUrls[0]
+    );
+    expect(shortenRouteResponse.body.urls[1].short_code).not.toBe(
+      originalUrls[1]
+    );
+
+    const url1 = await prisma.url.findUnique({
+      where: {
+        shortCode: shortenRouteResponse.body.urls[0].short_code,
+      },
+    });
+    expect(url1).toBeDefined();
+    expect(url1.originalUrl).toBe(originalUrls[0]);
+    expect(url1.shortCode).toBe(shortenRouteResponse.body.urls[0].short_code);
+
+    const url2 = await prisma.url.findUnique({
+      where: {
+        shortCode: shortenRouteResponse.body.urls[1].short_code,
+      },
+    });
+    expect(url2).toBeDefined();
+    expect(url2.originalUrl).toBe(originalUrls[1]);
+    expect(url2.shortCode).toBe(shortenRouteResponse.body.urls[1].short_code);
+  });
+
+  it("should handle invalid urls in batch shorten request", async () => {
+    const originalUrls = [generateRandomUrl(), "invalid-url"];
+    const shortenRouteResponse = await request(app)
+      .post("/batch-shorten")
+      .send({ urls: originalUrls.map((url) => ({ original_url: url })) })
+      .set("Accept", "application/json");
+    expect(shortenRouteResponse.status).toBe(201);
+    expect(shortenRouteResponse.body.urls).toBeDefined();
+    expect(shortenRouteResponse.body.urls.length).toBe(2);
+    expect(shortenRouteResponse.body.urls[0].short_code).toBeDefined();
+    expect(shortenRouteResponse.body.urls[1].error).toBeDefined();
+  });
+
+  it("should handle empty urls in batch shorten request", async () => {
+    const urls = [
+      { original_url: "" },
+      { original_url: null },
+      { original_url: "https://google.com" },
+    ];
+    const shortenRouteResponse = await request(app)
+      .post("/batch-shorten")
+      .send({ urls: urls })
+      .set("Accept", "application/json");
+    expect(shortenRouteResponse.status).toBe(201);
+    expect(shortenRouteResponse.body.urls).toBeDefined();
+    expect(shortenRouteResponse.body.urls.length).toBe(3);
+    expect(shortenRouteResponse.body.urls[0].error).toBeDefined();
+    expect(shortenRouteResponse.body.urls[1].error).toBeDefined();
+    expect(shortenRouteResponse.body.urls[2].short_code).toBeDefined();
+  });
 });
