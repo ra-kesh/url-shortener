@@ -32,12 +32,13 @@ export class UrlService {
     });
   }
 
-  static async create(originalUrl) {
+  static async create(originalUrl, userId = null) {
     const shortCode = this.generateShortCode();
     return await prisma.url.create({
       data: {
         originalUrl: originalUrl,
         shortCode: shortCode,
+        userId: userId,
       },
     });
   }
@@ -62,5 +63,14 @@ export class UrlService {
         lastClicked: new Date(),
       },
     });
+  }
+
+  static async findUserByApiKey(apiKey) {
+    const user = await prisma.user.findUnique({
+      where: {
+        apiKey: apiKey,
+      },
+    });
+    return user;
   }
 }

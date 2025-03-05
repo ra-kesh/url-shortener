@@ -10,8 +10,21 @@ export class UrlController {
       });
     }
 
+    let apiKey = req.headers["api-key"] || req.headers.authorization;
+    console.log("API Key received:", apiKey);
+
+    if (apiKey?.startsWith("Bearer ")) {
+      apiKey = apiKey.split(" ")[1];
+    }
+
     try {
-      const newUrl = await UrlService.create(original_url);
+      let user = null;
+      if (apiKey !== undefined) {
+        user = await UrlService.findUserByApiKey(apiKey);
+      }
+
+      const newUrl = await UrlService.create(original_url, user.id ?? null);
+
       return res.status(201).json({
         short_code: newUrl.shortCode,
       });
