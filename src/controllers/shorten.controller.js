@@ -9,15 +9,7 @@ export default async function shorten(req, res) {
     });
   }
 
-  let apiKey =
-    req.headers["api-key"] ||
-    req.headers["x-api-key"] ||
-    req.body.apiKey ||
-    req.headers.authorization;
-
-  if (apiKey?.startsWith("Bearer ")) {
-    apiKey = apiKey.split(" ")[1];
-  }
+  const apiKey = UrlService.extractApiKey(req.headers);
 
   try {
     let user = null;

@@ -28,6 +28,11 @@ export class UrlService {
     return crypto.randomBytes(3).toString("hex");
   }
 
+  static extractApiKey(headers) {
+    const apiKey = headers.authorization || headers["api-key"];
+    return apiKey?.startsWith("Bearer ") ? apiKey.split(" ")[1] : apiKey;
+  }
+
   static async findByOriginalUrl(originalUrl) {
     return await prisma.url.findUnique({
       where: {

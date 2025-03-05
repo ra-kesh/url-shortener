@@ -9,11 +9,7 @@ export default async function deleteUrl(req, res) {
     });
   }
 
-  let apiKey = req.headers["api-key"] || req.headers.authorization;
-
-  if (apiKey?.startsWith("Bearer ")) {
-    apiKey = apiKey.split(" ")[1];
-  }
+  const apiKey = UrlService.extractApiKey(req.headers);
 
   try {
     let user = null;
