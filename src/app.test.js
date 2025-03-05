@@ -151,6 +151,34 @@ describe("Url Shortener API Tests", () => {
     expect(redirectRouteResponse.text).toBe("URL has expired");
   });
 
+  it("should create a url with custom code", async () => {
+    const originalUrl = generateRandomUrl();
+    const customCode = "customcode";
+    const shortenRouteResponse = await request(app)
+      .post("/shorten")
+      .send({ original_url: originalUrl, custom_code: customCode })
+      .set("Accept", "application/json");
+    expect(shortenRouteResponse.status).toBe(201);
+    expect(shortenRouteResponse.body.short_code).toBe(customCode);
+  });
+
+  it("should return 500 for invalid custom code", async () => {
+    const originalUrl = generateRandomUrl();
+    const customCode = "taken-code";
+    await request(app)
+      .post("/shorten")
+      .send({ original_url: originalUrl, custom_code: customCode })
+      .set("Accept", "application/json");
+    const shortenRouteResponse = await request(app)
+      .post("/shorten")
+      .send({ original_url: originalUrl, custom_code: customCode })
+      .set("Accept", "application/json");
+    expect(shortenRouteResponse.status).toBe(500);
+    expect(shortenRouteResponse.body.error).toBe(
+      "Custom code is already taken"
+    );
+  });
+
   it("should batch shorten multiple URLs", async () => {
     const originalUrls = [generateRandomUrl(), generateRandomUrl()];
 

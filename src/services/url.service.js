@@ -33,15 +33,6 @@ export class UrlService {
     return apiKey?.startsWith("Bearer ") ? apiKey.split(" ")[1] : apiKey;
   }
 
-  static isValidUrl(url) {
-    try {
-      const url = new URL(url);
-      return url.protocol === "http:" || url.protocol === "https:";
-    } catch (error) {
-      return false;
-    }
-  }
-
   static async findByOriginalUrl(originalUrl) {
     return await prisma.url.findUnique({
       where: {
@@ -58,8 +49,23 @@ export class UrlService {
     });
   }
 
-  static async create(originalUrl, userId = null, expiry_date = null) {
-    const shortCode = this.generateShortCode();
+  static async create(
+    originalUrl,
+    userId = null,
+    expiry_date = null,
+    custom_code = null
+  ) {
+    let shortCode;
+    if (custom_code) {
+      const isCustomCodeTaken = await this.findByShortCode(custom_code);
+      if (isCustomCodeTaken) {
+        throw new Error("Custom code is already taken");
+      }
+
+      shortCode = custom_code;
+    } else {
+      shortCode = this.generateShortCode();
+    }
 
     const urlData = {
       originalUrl: originalUrl,
