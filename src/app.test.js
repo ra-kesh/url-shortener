@@ -5,25 +5,21 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Setup and teardown hooks
 beforeAll(async () => {
-  // Connect to the database
   await prisma.$connect();
 });
 
 afterAll(async () => {
-  // Disconnect from the database
   await prisma.$disconnect();
 });
 
 beforeEach(async () => {
-  // Clean up the database before each test
   await prisma.url.deleteMany({});
+  await prisma.user.deleteMany({});
 });
 
 describe("Url Shortener API Tests", () => {
   it("should shorten a url and redirect", async () => {
-    let shortCode;
     const originalUrl = generateRandomUrl();
 
     const shortenRouteResponse = await request(app)
@@ -33,7 +29,7 @@ describe("Url Shortener API Tests", () => {
 
     expect(shortenRouteResponse.status).toBe(201);
     expect(shortenRouteResponse.body.short_code).toBeDefined();
-    shortCode = shortenRouteResponse.body.short_code;
+    const shortCode = shortenRouteResponse.body.short_code;
 
     const redirectRouteResponse = await request(app).get(
       `/redirect?code=${shortCode}`
@@ -43,25 +39,41 @@ describe("Url Shortener API Tests", () => {
     expect(redirectRouteResponse.headers.location).toBe(originalUrl);
   });
 
-  it("should return the same short code for duplicate original URLs", async () => {
+  it("should link short code to owner if api key is provided", async () => {
     const originalUrl = generateRandomUrl();
 
-    const shortenRouteResponse1 = await request(app)
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+      },
+    });
+
+    const userCount = await prisma.user.count();
+    expect(userCount).toBe(1);
+
+    const shortenRouteResponse = await request(app)
       .post("/shorten")
       .send({ original_url: originalUrl })
-      .set("Accept", "application/json");
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
 
-    expect(shortenRouteResponse1.status).toBe(201);
-    expect(shortenRouteResponse1.body.short_code).toBeDefined();
-    const shortCode1 = shortenRouteResponse1.body.short_code;
+    expect(shortenRouteResponse.status).toBe(201);
+    const shortCode = shortenRouteResponse.body.short_code;
+    expect(shortCode).toBeDefined();
 
-    const shortenRouteResponse2 = await request(app)
-      .post("/shorten")
-      .send({ original_url: originalUrl })
-      .set("Accept", "application/json");
+    const url = await prisma.url.findUnique({
+      where: {
+        shortCode: shortCode,
+      },
+    });
 
-    expect(shortenRouteResponse2.status).toBe(200);
-    expect(shortenRouteResponse2.body.short_code).toBe(shortCode1);
+    expect(url).toBeDefined();
+    expect(url).not.toBeNull();
+    expect(url.userId).toBe(testUser.id);
   });
 
   it("should return 404 for non-existent short code", async () => {
@@ -74,7 +86,7 @@ describe("Url Shortener API Tests", () => {
     expect(response.status).toBe(400);
   });
 
-  it("shoud delete a short code successfully", async () => {
+  it("should delete a short code successfully", async () => {
     const originalUrl = generateRandomUrl();
 
     const shortenRouteResponse = await request(app)

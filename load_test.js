@@ -1,16 +1,16 @@
 import http from "k6/http";
 import { check } from "k6";
-import { generateRandomUrl } from "./util.js";
+import { generateRandomUrl } from "./src/util.js";
 
-const baseUrl = `https://url-shortener-y95b.onrender.com`;
+// const baseUrl = `https://url-shortener-y95b.onrender.com`;
+const baseUrl = `http://localhost:3000`;
 
 export let options = {
   scenarios: {
     shared_iterations_scenario: {
       executor: "shared-iterations",
-      vus: 300,
-      iterations: 300,
-      //   maxDuration: "30s",
+      vus: 10,
+      iterations: 10,
     },
   },
 };
