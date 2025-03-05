@@ -56,9 +56,12 @@ export class UrlService {
   }
 
   static async delete(shortCode) {
-    return await prisma.url.delete({
+    return await prisma.url.update({
       where: {
         shortCode: shortCode,
+      },
+      data: {
+        deletedAt: new Date(),
       },
     });
   }
