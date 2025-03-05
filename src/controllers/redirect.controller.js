@@ -16,6 +16,10 @@ export default async function redirect(req, res) {
       return res.status(404).send("No original URL found");
     }
 
+    if (url.expiresAt && url.expiresAt < new Date()) {
+      return res.status(410).send("URL has expired");
+    }
+
     await UrlService.updateClickCount(code);
 
     res.redirect(url.originalUrl);

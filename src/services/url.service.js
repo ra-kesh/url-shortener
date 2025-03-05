@@ -49,14 +49,21 @@ export class UrlService {
     });
   }
 
-  static async create(originalUrl, userId = null) {
+  static async create(originalUrl, userId = null, expiry_date = null) {
     const shortCode = this.generateShortCode();
+
+    const urlData = {
+      originalUrl: originalUrl,
+      shortCode: shortCode,
+      userId: userId,
+    };
+
+    if (expiry_date) {
+      urlData.expiresAt = new Date(expiry_date);
+    }
+
     return await prisma.url.create({
-      data: {
-        originalUrl: originalUrl,
-        shortCode: shortCode,
-        userId: userId,
-      },
+      data: urlData,
     });
   }
 

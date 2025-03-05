@@ -129,4 +129,25 @@ describe("Url Shortener API Tests", () => {
     );
     expect(deleteRouteResponse.body).toBeDefined();
   });
+
+  it("should not redirect for expired short code", async () => {
+    const originalUrl = generateRandomUrl();
+
+    const shortenRouteResponse = await request(app)
+      .post("/shorten")
+      .send({
+        original_url: originalUrl,
+        expiry_date: new Date().toISOString(),
+      })
+      .set("Accept", "application/json");
+
+    expect(shortenRouteResponse.status).toBe(201);
+    expect(shortenRouteResponse.body.short_code).toBeDefined();
+    const shortCode = shortenRouteResponse.body.short_code;
+    const redirectRouteResponse = await request(app).get(
+      `/redirect?code=${shortCode}`
+    );
+    expect(redirectRouteResponse.status).toBe(410);
+    expect(redirectRouteResponse.text).toBe("URL has expired");
+  });
 });
