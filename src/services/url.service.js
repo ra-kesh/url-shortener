@@ -28,6 +28,11 @@ export class UrlService {
     return crypto.randomBytes(3).toString("hex");
   }
 
+  static extractApiKey(headers) {
+    const apiKey = headers.authorization || headers["api-key"];
+    return apiKey?.startsWith("Bearer ") ? apiKey.split(" ")[1] : apiKey;
+  }
+
   static async findByOriginalUrl(originalUrl) {
     return await prisma.url.findUnique({
       where: {
@@ -44,14 +49,50 @@ export class UrlService {
     });
   }
 
-  static async create(originalUrl, userId = null) {
-    const shortCode = this.generateShortCode();
+  static async create(
+    originalUrl,
+    userId = null,
+    expiry_date = null,
+    custom_code = null,
+    password = null
+  ) {
+    let shortCode;
+    if (custom_code) {
+      const isCustomCodeTaken = await this.findByShortCode(custom_code);
+      if (isCustomCodeTaken) {
+        throw new Error("Custom code is already taken");
+      }
+
+      shortCode = custom_code;
+    } else {
+      shortCode = this.generateShortCode();
+    }
+
+    const urlData = {
+      originalUrl: originalUrl,
+      shortCode: shortCode,
+      userId: userId,
+    };
+
+    if (expiry_date) {
+      urlData.expiresAt = new Date(expiry_date);
+    }
+
+    if (password) {
+      urlData.password = password;
+    }
+
     return await prisma.url.create({
-      data: {
-        originalUrl: originalUrl,
+      data: urlData,
+    });
+  }
+
+  static async update(shortCode, updateData) {
+    return await prisma.url.update({
+      where: {
         shortCode: shortCode,
-        userId: userId,
       },
+      data: updateData,
     });
   }
 
@@ -84,6 +125,18 @@ export class UrlService {
     const user = await prisma.user.findUnique({
       where: {
         apiKey: apiKey,
+      },
+    });
+    return user;
+  }
+
+  static async findUserWithUrlsByApiKey(apiKey) {
+    const user = await prisma.user.findUnique({
+      where: {
+        apiKey: apiKey,
+      },
+      include: {
+        urls: true,
       },
     });
     return user;
