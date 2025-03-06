@@ -1,7 +1,7 @@
 import { UrlService } from "../services/url.service.js";
 
 export default async function redirect(req, res) {
-  const { code } = req.query;
+  const { code, password } = req.query;
 
   if (!code) {
     return res.status(400).json({
@@ -14,6 +14,16 @@ export default async function redirect(req, res) {
 
     if (!url || url.deletedAt) {
       return res.status(404).send("No original URL found");
+    }
+
+    if (url.password) {
+      if (!password) {
+        return res.status(401).send("Password required");
+      }
+
+      if (password !== url.password) {
+        return res.status(403).send("Invalid password");
+      }
     }
 
     if (url.expiresAt && url.expiresAt < new Date()) {

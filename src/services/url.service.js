@@ -53,7 +53,8 @@ export class UrlService {
     originalUrl,
     userId = null,
     expiry_date = null,
-    custom_code = null
+    custom_code = null,
+    password = null
   ) {
     let shortCode;
     if (custom_code) {
@@ -75,6 +76,10 @@ export class UrlService {
 
     if (expiry_date) {
       urlData.expiresAt = new Date(expiry_date);
+    }
+
+    if (password) {
+      urlData.password = password;
     }
 
     return await prisma.url.create({

@@ -1,8 +1,14 @@
 import { UrlService } from "../services/url.service.js";
 
 export default async function update(req, res) {
-  const { short_code, original_url, expiry_date, custom_code, undelete } =
-    req.body;
+  const {
+    short_code,
+    original_url,
+    expiry_date,
+    custom_code,
+    undelete,
+    password,
+  } = req.body;
 
   if (!short_code) {
     return res.status(400).json({
@@ -10,7 +16,7 @@ export default async function update(req, res) {
     });
   }
 
-  if (!original_url && !expiry_date && !custom_code && !undelete) {
+  if (!original_url && !expiry_date && !custom_code && !undelete && !password) {
     return res.status(400).json({
       error: "No update provided",
     });
@@ -62,6 +68,9 @@ export default async function update(req, res) {
     }
     if (undelete) {
       updateData.deletedAt = null;
+    }
+    if (password) {
+      updateData.password = password;
     }
     await UrlService.update(short_code, updateData);
 
