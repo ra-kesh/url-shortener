@@ -22,6 +22,7 @@ model Url {
   userId Int?
   deletedAt DateTime?
   expiresAt DateTime?
+  password String?
 }
 
 model User{
