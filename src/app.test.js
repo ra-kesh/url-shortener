@@ -453,3 +453,41 @@ describe("Url Shortner update api tests", () => {
     expect(updateRouteResponse.status).toBe(401);
   });
 });
+
+describe("Url shortener passsword tests", () => {
+  it("should require password for protected short code", async () => {
+    const originalUrl = generateRandomUrl();
+
+    const shortenRouteResponse = await request(app)
+      .post("/shorten")
+      .send({ original_url: originalUrl, password: "password" })
+      .set("Accept", "application/json");
+
+    expect(shortenRouteResponse.status).toBe(201);
+    expect(shortenRouteResponse.body.short_code).toBeDefined();
+    const shortCode = shortenRouteResponse.body.short_code;
+    const redirectRouteResponse = await request(app).get(
+      `/redirect?code=${shortCode}`
+    );
+    expect(redirectRouteResponse.status).toBe(401);
+    expect(redirectRouteResponse.text).toBe("Password required");
+  });
+
+  it("should not redirect for incorrect password", async () => {
+    const originalUrl = generateRandomUrl();
+    const password = "password";
+    const shortenRouteResponse = await request(app)
+      .post("/shorten")
+      .send({ original_url: originalUrl, password: password })
+      .set("Accept", "application/json");
+
+    expect(shortenRouteResponse.status).toBe(201);
+    expect(shortenRouteResponse.body.short_code).toBeDefined();
+    const shortCode = shortenRouteResponse.body.short_code;
+    const redirectRouteResponse = await request(app).get(
+      `/redirect?code=${shortCode}&password=wrongpassword`
+    );
+    expect(redirectRouteResponse.status).toBe(403);
+    expect(redirectRouteResponse.text).toBe("Invalid password");
+  });
+});
