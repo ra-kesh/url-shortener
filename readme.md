@@ -1,6 +1,25 @@
 # URL Shortener API
 
-A simple URL shortener API built with Node.js and Express framework. It uses SQLite as the database to store the mapping between short codes and original URLs.
+An URL shortener API built with Node.js and Express framework. It uses Turso (SQLite) as the database to store and manage shortened URLs with advanced features like custom codes, expiration dates, and password protection.
+
+## Features
+
+- URL Shortening
+
+  - Generate short codes for URLs
+  - Custom short codes support
+  - Password protection for URLs
+  - URL expiration dates
+  - Click tracking
+
+- User Management
+
+  - API key authentication
+  - User tiers (hobby, enterprise)
+  - URL ownership tracking
+
+- Enterprise Features
+  - Batch URL shortening
 
 ## Tech Stack
 
@@ -16,18 +35,6 @@ A simple URL shortener API built with Node.js and Express framework. It uses SQL
 - Node.js (v18 or higher)
 - pnpm
 - k6 (for load testing)
-
-## Project Structure
-
-```plaintext
-src/
-├── controllers/    # Request handlers
-├── services/      # Business logic
-├── routes/        # API routes
-├── utils/         # Utility functions
-├── app.js         # Express app setup
-└── server.js      # Server entry point
-```
 
 ## Installation
 
@@ -73,19 +80,75 @@ pnpm start
 
 ### Shorten URL
 
-- **POST** `/shorten`
-- **Body:** `{ "original_url": "https://example.com" }`
-- **Response:** `{ "short_code": "abc123" }`
+- POST /shorten
+- Body:
+
+```json
+{
+  "original_url": "https://example.com",
+  "custom_code": "mycode", // optional
+  "password": "mypassword", // optional
+  "expiry_date": "2024-12-31" // optional
+}
+```
+
+- Headers:
+  - Authorization: Bearer your-api-key (optional)
+- Response: { "short_code": "abc123" }
+
+### Batch Shorten URLs (Enterprise Only)
+
+- POST /batch-shorten
+- Body:
+
+```json
+{
+  "urls": [
+    { "original_url": "https://example1.com" },
+    { "original_url": "https://example2.com" }
+  ]
+}
+```
+
+- Headers:
+  - Authorization: Bearer your-api-key (required)
+- Response: Array of shortened URLs
 
 ### Redirect
 
-- **GET** `/redirect?code=abc123`
+- GET /redirect?code=abc123
+- Query Parameters:
+- password (if URL is password protected)
 - Redirects to original URL
+- Returns 410 if URL has expired
+- Returns 401 if password is required
+- Returns 403 if password is invalid
+
+### Update URL
+
+- PUT /update
+- Body:
+
+```json
+{
+  "short_code": "abc123",
+  "original_url": "https://newurl.com", // optional
+  "expiry_date": "2024-12-31", // optional
+  "custom_code": "newcode", // optional
+  "password": "newpassword", // optional
+  "undelete": true // optional
+}
+```
+
+- Headers:
+  - Authorization: Bearer your-api-key (required)
 
 ### Delete URL
 
-- **DELETE** `/delete?code=abc123`
-- **Response:** `204 No Content`
+- DELETE /delete?code=abc123
+- Headers:
+  - Authorization: Bearer your-api-key (required for owned URLs)
+- Response: 204 No Content
 
 ## Testing
 
