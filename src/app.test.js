@@ -179,13 +179,34 @@ describe("Url Shortener API Tests", () => {
     );
   });
 
-  it("should batch shorten multiple URLs", async () => {
+  it("should batch shorten multiple URLs only for enterprise users", async () => {
     const originalUrls = [generateRandomUrl(), generateRandomUrl()];
+
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+        tier: "enterprise",
+      },
+    });
+    expect(testUser).toBeDefined();
+    expect(testUser.tier).toBe("enterprise");
+    expect(testUser.apiKey).toBe("test-api-key");
+    expect(testUser.email).toBe("test@example.com");
+
+    const userCount = await prisma.user.count();
+    expect(userCount).toBe(1);
+    expect(testUser.name).toBe("Test User");
+    expect(testUser.createdAt).toBeDefined();
 
     const shortenRouteResponse = await request(app)
       .post("/batch-shorten")
       .send({ urls: originalUrls.map((url) => ({ original_url: url })) })
-      .set("Accept", "application/json");
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
 
     expect(shortenRouteResponse.status).toBe(201);
     expect(shortenRouteResponse.body.urls).toBeDefined();
@@ -229,10 +250,26 @@ describe("Url Shortener API Tests", () => {
 
   it("should handle invalid urls in batch shorten request", async () => {
     const originalUrls = [generateRandomUrl(), "invalid-url"];
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+        tier: "enterprise",
+      },
+    });
+    expect(testUser).toBeDefined();
+    expect(testUser.tier).toBe("enterprise");
+    expect(testUser.apiKey).toBe("test-api-key");
+
     const shortenRouteResponse = await request(app)
       .post("/batch-shorten")
       .send({ urls: originalUrls.map((url) => ({ original_url: url })) })
-      .set("Accept", "application/json");
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
+
     expect(shortenRouteResponse.status).toBe(201);
     expect(shortenRouteResponse.body.urls).toBeDefined();
     expect(shortenRouteResponse.body.urls.length).toBe(2);
@@ -246,15 +283,62 @@ describe("Url Shortener API Tests", () => {
       { original_url: null },
       { original_url: "https://google.com" },
     ];
+
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+        tier: "enterprise",
+      },
+    });
+
+    expect(testUser).toBeDefined();
+    expect(testUser.tier).toBe("enterprise");
+    expect(testUser.apiKey).toBe("test-api-key");
+
     const shortenRouteResponse = await request(app)
       .post("/batch-shorten")
       .send({ urls: urls })
-      .set("Accept", "application/json");
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
     expect(shortenRouteResponse.status).toBe(201);
     expect(shortenRouteResponse.body.urls).toBeDefined();
     expect(shortenRouteResponse.body.urls.length).toBe(3);
     expect(shortenRouteResponse.body.urls[0].error).toBeDefined();
     expect(shortenRouteResponse.body.urls[1].error).toBeDefined();
     expect(shortenRouteResponse.body.urls[2].short_code).toBeDefined();
+  });
+
+  it("should return 403 for non-enterprise users trying to batch shorten", async () => {
+    const originalUrls = [generateRandomUrl(), generateRandomUrl()];
+
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+        tier: "hobby",
+      },
+    });
+
+    expect(testUser).toBeDefined();
+    expect(testUser.tier).toBe("hobby");
+    expect(testUser.apiKey).toBe("test-api-key");
+
+    const shortenRouteResponse = await request(app)
+      .post("/batch-shorten")
+      .send({ urls: originalUrls.map((url) => ({ original_url: url })) })
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
+
+    expect(shortenRouteResponse.status).toBe(403);
+    expect(shortenRouteResponse.body.error).toBe(
+      "You do not have permission to batch shorten URLs"
+    );
   });
 });
