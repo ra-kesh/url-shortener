@@ -82,6 +82,15 @@ export class UrlService {
     });
   }
 
+  static async update(shortCode, updateData) {
+    return await prisma.url.update({
+      where: {
+        shortCode: shortCode,
+      },
+      data: updateData,
+    });
+  }
+
   static async delete(shortCode) {
     return await prisma.url.update({
       where: {
