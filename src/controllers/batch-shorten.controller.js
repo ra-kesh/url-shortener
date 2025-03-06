@@ -9,11 +9,27 @@ export default async function batchShorten(req, res) {
     });
   }
 
+  const apiKey = UrlService.extractApiKey(req.headers);
+
+  if (!apiKey) {
+    return res.status(401).json({
+      error: "No API key provided",
+    });
+  }
+
   try {
-    const apiKey = UrlService.extractApiKey(req.headers);
-    let user = null;
-    if (apiKey !== undefined) {
-      user = await UrlService.findUserByApiKey(apiKey);
+    const user = await UrlService.findUserByApiKey(apiKey);
+
+    if (!user) {
+      return res.status(401).json({
+        error: "Invalid API key",
+      });
+    }
+
+    if (user && user.tier !== "enterprise") {
+      return res.status(403).json({
+        error: "You do not have permission to batch shorten URLs",
+      });
     }
 
     const userId = user ? user.id : null;
