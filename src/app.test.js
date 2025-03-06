@@ -342,3 +342,114 @@ describe("Url Shortener API Tests", () => {
     );
   });
 });
+
+describe("Url Shortner update api tests", () => {
+  it("should update a url if short code is provided and user is owner", async () => {
+    const originalUrl = generateRandomUrl();
+    const newOriginalUrl = generateRandomUrl();
+
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+      },
+    });
+
+    expect(testUser).toBeDefined();
+    expect(testUser.apiKey).toBe("test-api-key");
+
+    const shortenRouteResponse = await request(app)
+      .post("/shorten")
+      .send({ original_url: originalUrl })
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
+
+    expect(shortenRouteResponse.status).toBe(201);
+    expect(shortenRouteResponse.body.short_code).toBeDefined();
+    const shortCode = shortenRouteResponse.body.short_code;
+    expect(shortCode).toBeDefined();
+
+    const updateRouteResponse = await request(app)
+      .put("/update")
+      .send({ short_code: shortCode, original_url: newOriginalUrl })
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
+
+    expect(updateRouteResponse.status).toBe(200);
+    expect(updateRouteResponse.body.message).toBe("URL updated successfully");
+
+    const url = await prisma.url.findUnique({
+      where: {
+        shortCode: shortCode,
+      },
+    });
+    expect(url).toBeDefined();
+    expect(url.originalUrl).toBe(newOriginalUrl);
+  });
+
+  it("should return 404 if short code is not found", async () => {
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+      },
+    });
+
+    expect(testUser).toBeDefined();
+    expect(testUser.apiKey).toBe("test-api-key");
+
+    const updateRouteResponse = await request(app)
+      .put("/update")
+      .send({ short_code: "nonexistent", original_url: "https://example.com" })
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
+
+    expect(updateRouteResponse.status).toBe(404);
+  });
+
+  it("should return 403 if user is not owner of the url", async () => {
+    const originalUrl = generateRandomUrl();
+
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+      },
+    });
+
+    expect(testUser).toBeDefined();
+    expect(testUser.apiKey).toBe("test-api-key");
+
+    const shortenRouteResponse = await request(app)
+      .post("/shorten")
+      .send({ original_url: originalUrl })
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
+
+    expect(shortenRouteResponse.status).toBe(201);
+    expect(shortenRouteResponse.body.short_code).toBeDefined();
+
+    const shortCode = shortenRouteResponse.body.short_code;
+
+    const updateRouteResponse = await request(app)
+      .put("/update")
+      .send({ short_code: shortCode, original_url: "https://example.com" })
+      .set({
+        Authorization: "Bearer invalid-api-key",
+        Accept: "application/json",
+      });
+
+    expect(updateRouteResponse.status).toBe(401);
+  });
+});
