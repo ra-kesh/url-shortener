@@ -150,7 +150,7 @@ describe("Url Shortener API Tests", () => {
     expect(redirectRouteResponse.status).toBe(404);
   });
 
-  it("should return 403 for unauthorized delete request", async () => {
+  it("should return 401 for unauthorized delete request", async () => {
     const originalUrl = generateRandomUrl();
 
     const testUser = await prisma.user.create({
@@ -178,11 +178,7 @@ describe("Url Shortener API Tests", () => {
     const deleteRouteResponse = await request(app)
       .delete(`/delete?code=${shortCode}`)
       .set("Authorization", "Bearer invalid-api-key");
-    expect(deleteRouteResponse.status).toBe(403);
-    expect(deleteRouteResponse.body.error).toBe(
-      "You do not have permission to delete this URL"
-    );
-    expect(deleteRouteResponse.body).toBeDefined();
+    expect(deleteRouteResponse.status).toBe(401);
   });
 
   it("should not redirect for expired short code", async () => {

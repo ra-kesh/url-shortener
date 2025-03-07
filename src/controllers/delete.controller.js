@@ -9,35 +9,25 @@ export default async function deleteUrl(req, res) {
     });
   }
 
-  const apiKey = UrlService.extractApiKey(req.headers);
-
   try {
-    let user = null;
-    if (apiKey !== undefined) {
-      user = await UrlService.findUserByApiKey(apiKey);
-    }
-
     const url = await UrlService.findByShortCode(code);
 
     if (!url || url.deletedAt) {
       return res.status(404).send("No original URL found");
     }
 
-    // If an API key was provided, it must be valid
-    if (apiKey !== undefined && user === null) {
-      return res.status(403).json({
-        error: "You do not have permission to delete this URL",
+    if (req.user === undefined) {
+      return res.status(401).json({
+        error: "No API key provided",
       });
     }
 
-    // Allow deletion if URL has no owner AND no API key was provided
-    if (url.userId === null && apiKey === undefined) {
+    if (url.userId === null) {
       await UrlService.delete(code);
       return res.status(204).send("URL deleted successfully");
     }
 
-    // For URLs with an owner, require authentication and ownership match
-    if (user !== null && url.userId === user.id) {
+    if (url.userId === req.user.id) {
       await UrlService.delete(code);
       return res.status(204).send("URL deleted successfully");
     } else {

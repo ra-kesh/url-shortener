@@ -14,7 +14,7 @@ const router = express.Router();
 router.post("/shorten", apiValidationMiddleware, shorten);
 router.get("/redirect", redirect);
 router.get("/urls", apiValidationMiddleware, urls);
-router.delete("/delete", deleteUrl);
+router.delete("/delete", apiValidationMiddleware, deleteUrl);
 router.post("/batch-shorten", batchShorten);
 router.put("/update", update);
 router.get("/health", health);
