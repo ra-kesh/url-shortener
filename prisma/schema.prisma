@@ -23,6 +23,8 @@ model Url {
   deletedAt DateTime?
   expiresAt DateTime?
   password String?
+  customDomainId Int?
+  customDomain CustomDomain? @relation(fields: [customDomainId], references: [id])
 }
 
 model User{
@@ -33,4 +35,15 @@ model User{
   createdAt DateTime @default(now())
   urls Url[]
   tier String @default("hobby")
+  customDomains CustomDomain[]
+}
+
+
+model CustomDomain{
+  id Int @id @default(autoincrement())
+  domain String @unique
+  userId Int
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
+  urls Url[]
 }
