@@ -443,6 +443,37 @@ describe("Url Shortener API Tests", () => {
       "You do not have permission to batch shorten URLs"
     );
   });
+  it("should list urls for enterprise users", async () => {
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+        tier: "enterprise",
+      },
+    });
+
+    expect(testUser).toBeDefined();
+    expect(testUser.apiKey).toBe("test-api-key");
+    expect(testUser.tier).toBe("enterprise");
+
+    await request(app)
+      .post("/shorten")
+      .send({ original_url: generateRandomUrl() })
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
+
+    const urlsRouteResponse = await request(app).get("/urls").set({
+      Authorization: "Bearer test-api-key",
+      Accept: "application/json",
+    });
+
+    expect(urlsRouteResponse.status).toBe(200);
+    expect(urlsRouteResponse.body.urls).toBeDefined();
+    expect(urlsRouteResponse.body.urls.length).toBe(1);
+  });
 });
 
 describe("Url Shortner update api tests", () => {

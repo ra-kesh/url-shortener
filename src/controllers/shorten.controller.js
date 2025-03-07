@@ -11,7 +11,6 @@ export default async function shorten(req, res) {
 
   try {
     const user = req.user;
-    console.log(user);
     const userId = user ? user.id : null;
     const newUrl = await UrlService.create(
       original_url,

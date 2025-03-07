@@ -134,10 +134,10 @@ export class UrlService {
     return user;
   }
 
-  static async findUserWithUrlsByApiKey(apiKey) {
+  static async findUserWithUrlsById(userId) {
     const user = await prisma.user.findUnique({
       where: {
-        apiKey: apiKey,
+        id: userId,
       },
       include: {
         urls: true,
