@@ -4,6 +4,18 @@ import { fileURLToPath } from "url";
 import { UrlService } from "../services/url.service.js";
 
 export default async function blacklistMiddleware(req, res, next) {
+  const startTime = Date.now();
+
+  const originalSend = res.send;
+
+  res.send = function (...args) {
+    const endTime = Date.now();
+    const elaspsedTime = endTime - startTime;
+    console.log(`Response time: ${elaspsedTime}ms`);
+    res.setHeader("X-Processing-Time", `${elaspsedTime}ms`);
+    return originalSend.apply(this, args);
+  };
+
   try {
     const apikey = await UrlService.extractApiKey(req.headers);
 
