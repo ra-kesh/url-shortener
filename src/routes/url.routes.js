@@ -7,6 +7,7 @@ import batchShorten from "../controllers/batch-shorten.controller.js";
 import update from "../controllers/update.controller.js";
 import urls from "../controllers/urls.controller.js";
 import { health } from "../controllers/health.controller.js";
+import apiValidationMiddleware from "../middleware/api-validation.middlware.js";
 
 const router = express.Router();
 

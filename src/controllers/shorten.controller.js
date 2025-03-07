@@ -30,7 +30,7 @@ export default async function shorten(req, res) {
       short_code: newUrl.shortCode,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       error: error.message,
     });
   }
