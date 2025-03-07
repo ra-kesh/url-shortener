@@ -15,8 +15,8 @@ router.post("/shorten", apiValidationMiddleware, shorten);
 router.get("/redirect", redirect);
 router.get("/urls", apiValidationMiddleware, urls);
 router.delete("/delete", apiValidationMiddleware, deleteUrl);
-router.post("/batch-shorten", batchShorten);
-router.put("/update", update);
+router.post("/batch-shorten", apiValidationMiddleware, batchShorten);
+router.put("/update", apiValidationMiddleware, update);
 router.get("/health", health);
 
 export default router;

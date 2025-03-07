@@ -22,29 +22,14 @@ export default async function update(req, res) {
     });
   }
 
-  const apiKey = UrlService.extractApiKey(req.headers);
-
-  if (!apiKey) {
-    return res.status(401).json({
-      error: "No API key provided",
-    });
-  }
-
   try {
-    const user = await UrlService.findUserByApiKey(apiKey);
-    if (!user) {
-      return res.status(401).json({
-        error: "Invalid API key",
-      });
-    }
-
     const url = await UrlService.findByShortCode(short_code);
 
     if (!url) {
       return res.status(404).send("No original URL found");
     }
 
-    if (user.id !== url.userId) {
+    if (req.user === undefined || req.user.id !== url.userId) {
       return res.status(403).json({
         error: "You do not have permission to update this URL",
       });
