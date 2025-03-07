@@ -348,3 +348,10 @@
 2025-03-07T09:24:22.459Z - GET -127.0.0.1/redirect?code=1ff335 - undefined - ::ffff:127.0.0.1
 2025-03-07T09:24:22.462Z - POST -127.0.0.1/shorten - undefined - ::ffff:127.0.0.1
 2025-03-07T09:24:22.464Z - GET -127.0.0.1/redirect?code=2d1fc0&password=wrongpassword - undefined - ::ffff:127.0.0.1
+2025-03-07T13:08:40.377Z - POST -localhost/shorten - HTTPie - ::1
+2025-03-07T13:11:18.201Z - POST -localhost/shorten - HTTPie - ::1
+2025-03-07T13:12:01.746Z - POST -localhost/shorten - HTTPie - ::1
+2025-03-07T13:12:58.564Z - POST -localhost/shorten - HTTPie - ::1
+2025-03-07T13:16:54.038Z - POST -localhost/shorten - HTTPie - ::1
+2025-03-07T13:16:59.553Z - POST -localhost/shorten - HTTPie - ::1
+2025-03-07T13:17:25.440Z - POST -localhost/shorten - HTTPie - ::1

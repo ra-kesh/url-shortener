@@ -9,16 +9,27 @@ import urls from "../controllers/urls.controller.js";
 import { health } from "../controllers/health.controller.js";
 import apiValidationMiddleware from "../middleware/api-validation.middlware.js";
 import enterpriseValidationMiddleware from "../middleware/enterprise.middleware.js";
+import blacklistMiddleware from "../middleware/blacklist.middleware.js";
 
 const router = express.Router();
 
-router.post("/shorten", apiValidationMiddleware, shorten);
-router.get("/urls", apiValidationMiddleware, urls);
-router.delete("/delete", apiValidationMiddleware, deleteUrl);
-router.put("/update", apiValidationMiddleware, update);
-router.post("/batch-shorten", enterpriseValidationMiddleware, batchShorten);
+router.post("/shorten", blacklistMiddleware, apiValidationMiddleware, shorten);
+router.get("/urls", blacklistMiddleware, apiValidationMiddleware, urls);
+router.delete(
+  "/delete",
+  blacklistMiddleware,
+  apiValidationMiddleware,
+  deleteUrl
+);
+router.put("/update", blacklistMiddleware, apiValidationMiddleware, update);
+router.post(
+  "/batch-shorten",
+  blacklistMiddleware,
+  enterpriseValidationMiddleware,
+  batchShorten
+);
 
-router.get("/redirect", redirect);
-router.get("/health", health);
+router.get("/redirect", blacklistMiddleware, redirect);
+router.get("/health", blacklistMiddleware, health);
 
 export default router;
