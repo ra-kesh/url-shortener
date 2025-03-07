@@ -7,6 +7,7 @@ import batchShorten from "../controllers/batch-shorten.controller.js";
 import update from "../controllers/update.controller.js";
 import urls from "../controllers/urls.controller.js";
 import { health } from "../controllers/health.controller.js";
+import addDomain from "../controllers/add-domain.controller.js";
 
 const router = express.Router();
 
@@ -15,6 +16,7 @@ router.get("/redirect", redirect);
 router.get("/urls", urls);
 router.delete("/delete", deleteUrl);
 router.post("/batch-shorten", batchShorten);
+router.post("/add-domain", addDomain);
 router.put("/update", update);
 router.get("/health", health);
 

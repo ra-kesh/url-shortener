@@ -35,7 +35,7 @@ model User{
   createdAt DateTime @default(now())
   urls Url[]
   tier String @default("hobby")
-  customDomains CustomDomain[]
+  customDomains CustomDomain[] // prisma level relation only
 }
 
 

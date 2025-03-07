@@ -141,8 +141,26 @@ export class UrlService {
       },
       include: {
         urls: true,
+        // customDomains: true,
       },
     });
     return user;
+  }
+
+  static async findCustomDomainByDomain(domain) {
+    return await prisma.customDomain.findUnique({
+      where: {
+        domain: domain,
+      },
+    });
+  }
+
+  static async addDomain(domain, userId) {
+    return await prisma.customDomain.create({
+      data: {
+        domain: domain,
+        userId: userId,
+      },
+    });
   }
 }
