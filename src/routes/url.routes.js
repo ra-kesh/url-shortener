@@ -11,7 +11,7 @@ import apiValidationMiddleware from "../middleware/api-validation.middlware.js";
 
 const router = express.Router();
 
-router.post("/shorten", shorten);
+router.post("/shorten", apiValidationMiddleware, shorten);
 router.get("/redirect", redirect);
 router.get("/urls", urls);
 router.delete("/delete", deleteUrl);

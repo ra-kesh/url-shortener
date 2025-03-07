@@ -1,7 +1,7 @@
 import { UrlService } from "../services/url.service.js";
 
-export default function apiValidationMiddleware(req, res, next) {
-  const apiKey = UrlService.extractApiKey(req.headers);
+export default async function apiValidationMiddleware(req, res, next) {
+  const apiKey = await UrlService.extractApiKey(req.headers);
 
   if (!apiKey) {
     return res.status(401).json({
@@ -10,7 +10,7 @@ export default function apiValidationMiddleware(req, res, next) {
   }
 
   try {
-    const user = UrlService.findUserByApiKey(apiKey);
+    const user = await UrlService.findUserByApiKey(apiKey);
     if (!user) {
       return res.status(401).json({
         error: "Invalid API key",

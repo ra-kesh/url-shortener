@@ -9,14 +9,9 @@ export default async function shorten(req, res) {
     });
   }
 
-  const apiKey = UrlService.extractApiKey(req.headers);
-
   try {
-    let user = null;
-    if (apiKey !== undefined) {
-      user = await UrlService.findUserByApiKey(apiKey);
-    }
-
+    const user = req.user;
+    console.log(user);
     const userId = user ? user.id : null;
     const newUrl = await UrlService.create(
       original_url,
