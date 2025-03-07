@@ -9,6 +9,8 @@ export default async function redirect(req, res) {
     });
   }
 
+  // const host = req.headers.host;
+
   try {
     const url = await UrlService.findByShortCode(code);
 
