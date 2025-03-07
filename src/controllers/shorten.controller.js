@@ -1,7 +1,8 @@
 import { UrlService } from "../services/url.service.js";
 
 export default async function shorten(req, res) {
-  const { original_url, custom_code, expiry_date, password } = req.body;
+  const { original_url, custom_code, expiry_date, password, custom_domain } =
+    req.body;
 
   if (!original_url) {
     return res.status(400).json({
@@ -23,14 +24,15 @@ export default async function shorten(req, res) {
       userId,
       expiry_date,
       custom_code,
-      password
+      password,
+      custom_domain
     );
 
     return res.status(201).json({
       short_code: newUrl.shortCode,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       error: error.message,
     });
   }

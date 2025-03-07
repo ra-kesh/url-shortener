@@ -58,7 +58,8 @@ export class UrlService {
     userId = null,
     expiry_date = null,
     custom_code = null,
-    password = null
+    password = null,
+    custom_domain = null
   ) {
     let shortCode;
     if (custom_code) {
@@ -84,6 +85,14 @@ export class UrlService {
 
     if (password) {
       urlData.password = password;
+    }
+
+    if (custom_domain) {
+      const customDomain = await this.findCustomDomainByDomain(custom_domain);
+      if (!customDomain) {
+        throw new Error("Custom domain not found");
+      }
+      urlData.customDomainId = customDomain.id;
     }
 
     return await prisma.url.create({
