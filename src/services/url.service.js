@@ -24,6 +24,10 @@ if (isTestEnvironment) {
 }
 
 export class UrlService {
+  static async checkConnection() {
+    return await prisma.$queryRaw`SELECT 1`;
+  }
+
   static generateShortCode() {
     return crypto.randomBytes(3).toString("hex");
   }
