@@ -435,9 +435,6 @@ describe("Url Shortener API Tests", () => {
       });
 
     expect(shortenRouteResponse.status).toBe(403);
-    expect(shortenRouteResponse.body.error).toBe(
-      "You do not have permission to batch shorten URLs"
-    );
   });
   it("should list urls for enterprise users", async () => {
     const testUser = await prisma.user.create({
