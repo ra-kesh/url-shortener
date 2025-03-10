@@ -24,6 +24,10 @@ if (isTestEnvironment) {
 }
 
 export class UrlService {
+  static async checkConnection() {
+    return await prisma.$queryRaw`SELECT 1`;
+  }
+
   static generateShortCode() {
     return crypto.randomBytes(3).toString("hex");
   }
@@ -130,10 +134,10 @@ export class UrlService {
     return user;
   }
 
-  static async findUserWithUrlsByApiKey(apiKey) {
+  static async findUserWithUrlsById(userId) {
     const user = await prisma.user.findUnique({
       where: {
-        apiKey: apiKey,
+        id: userId,
       },
       include: {
         urls: true,

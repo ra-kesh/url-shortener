@@ -9,14 +9,8 @@ export default async function shorten(req, res) {
     });
   }
 
-  const apiKey = UrlService.extractApiKey(req.headers);
-
   try {
-    let user = null;
-    if (apiKey !== undefined) {
-      user = await UrlService.findUserByApiKey(apiKey);
-    }
-
+    const user = req.user;
     const userId = user ? user.id : null;
     const newUrl = await UrlService.create(
       original_url,
@@ -30,7 +24,7 @@ export default async function shorten(req, res) {
       short_code: newUrl.shortCode,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       error: error.message,
     });
   }

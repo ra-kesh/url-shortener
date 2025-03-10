@@ -22,10 +22,24 @@ describe("Url Shortener API Tests", () => {
   it("should shorten a url and redirect", async () => {
     const originalUrl = generateRandomUrl();
 
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+      },
+    });
+
+    const userCount = await prisma.user.count();
+    expect(userCount).toBe(1);
+
     const shortenRouteResponse = await request(app)
       .post("/shorten")
       .send({ original_url: originalUrl })
-      .set("Accept", "application/json");
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
 
     expect(shortenRouteResponse.status).toBe(201);
     expect(shortenRouteResponse.body.short_code).toBeDefined();
@@ -82,25 +96,52 @@ describe("Url Shortener API Tests", () => {
   });
 
   it("should return 400 for missing original URL", async () => {
-    const response = await request(app).post("/shorten").send({});
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+      },
+    });
+
+    const userCount = await prisma.user.count();
+    expect(userCount).toBe(1);
+
+    const response = await request(app).post("/shorten").send({}).set({
+      Authorization: "Bearer test-api-key",
+      Accept: "application/json",
+    });
     expect(response.status).toBe(400);
   });
 
   it("should delete a short code successfully", async () => {
     const originalUrl = generateRandomUrl();
 
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+      },
+    });
+
+    expect(testUser).toBeDefined();
+
     const shortenRouteResponse = await request(app)
       .post("/shorten")
       .send({ original_url: originalUrl })
-      .set("Accept", "application/json");
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
 
     expect(shortenRouteResponse.status).toBe(201);
     expect(shortenRouteResponse.body.short_code).toBeDefined();
 
     const shortCode = shortenRouteResponse.body.short_code;
-    const deleteRouteResponse = await request(app).delete(
-      `/delete?code=${shortCode}`
-    );
+    const deleteRouteResponse = await request(app)
+      .delete(`/delete?code=${shortCode}`)
+      .set("Authorization", "Bearer test-api-key");
     expect(deleteRouteResponse.status).toBe(204);
 
     const redirectRouteResponse = await request(app).get(
@@ -109,13 +150,27 @@ describe("Url Shortener API Tests", () => {
     expect(redirectRouteResponse.status).toBe(404);
   });
 
-  it("should return 403 for unauthorized delete request", async () => {
+  it("should return 401 for unauthorized delete request", async () => {
     const originalUrl = generateRandomUrl();
+
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+      },
+    });
+
+    expect(testUser).toBeDefined();
 
     const shortenRouteResponse = await request(app)
       .post("/shorten")
       .send({ original_url: originalUrl })
-      .set("Accept", "application/json");
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
+
     expect(shortenRouteResponse.status).toBe(201);
     expect(shortenRouteResponse.body.short_code).toBeDefined();
 
@@ -123,15 +178,21 @@ describe("Url Shortener API Tests", () => {
     const deleteRouteResponse = await request(app)
       .delete(`/delete?code=${shortCode}`)
       .set("Authorization", "Bearer invalid-api-key");
-    expect(deleteRouteResponse.status).toBe(403);
-    expect(deleteRouteResponse.body.error).toBe(
-      "You do not have permission to delete this URL"
-    );
-    expect(deleteRouteResponse.body).toBeDefined();
+    expect(deleteRouteResponse.status).toBe(401);
   });
 
   it("should not redirect for expired short code", async () => {
     const originalUrl = generateRandomUrl();
+
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+      },
+    });
+
+    expect(testUser).toBeDefined();
 
     const shortenRouteResponse = await request(app)
       .post("/shorten")
@@ -139,7 +200,10 @@ describe("Url Shortener API Tests", () => {
         original_url: originalUrl,
         expiry_date: new Date().toISOString(),
       })
-      .set("Accept", "application/json");
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
 
     expect(shortenRouteResponse.status).toBe(201);
     expect(shortenRouteResponse.body.short_code).toBeDefined();
@@ -154,10 +218,25 @@ describe("Url Shortener API Tests", () => {
   it("should create a url with custom code", async () => {
     const originalUrl = generateRandomUrl();
     const customCode = "customcode";
+
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+      },
+    });
+
+    expect(testUser).toBeDefined();
+
     const shortenRouteResponse = await request(app)
       .post("/shorten")
       .send({ original_url: originalUrl, custom_code: customCode })
-      .set("Accept", "application/json");
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
+
     expect(shortenRouteResponse.status).toBe(201);
     expect(shortenRouteResponse.body.short_code).toBe(customCode);
   });
@@ -165,14 +244,33 @@ describe("Url Shortener API Tests", () => {
   it("should return 500 for invalid custom code", async () => {
     const originalUrl = generateRandomUrl();
     const customCode = "taken-code";
+
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+      },
+    });
+
+    expect(testUser).toBeDefined();
+
     await request(app)
       .post("/shorten")
       .send({ original_url: originalUrl, custom_code: customCode })
-      .set("Accept", "application/json");
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
+
     const shortenRouteResponse = await request(app)
       .post("/shorten")
       .send({ original_url: originalUrl, custom_code: customCode })
-      .set("Accept", "application/json");
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
+
     expect(shortenRouteResponse.status).toBe(500);
     expect(shortenRouteResponse.body.error).toBe(
       "Custom code is already taken"
@@ -337,9 +435,37 @@ describe("Url Shortener API Tests", () => {
       });
 
     expect(shortenRouteResponse.status).toBe(403);
-    expect(shortenRouteResponse.body.error).toBe(
-      "You do not have permission to batch shorten URLs"
-    );
+  });
+  it("should list urls for enterprise users", async () => {
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+        tier: "enterprise",
+      },
+    });
+
+    expect(testUser).toBeDefined();
+    expect(testUser.apiKey).toBe("test-api-key");
+    expect(testUser.tier).toBe("enterprise");
+
+    await request(app)
+      .post("/shorten")
+      .send({ original_url: generateRandomUrl() })
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
+
+    const urlsRouteResponse = await request(app).get("/urls").set({
+      Authorization: "Bearer test-api-key",
+      Accept: "application/json",
+    });
+
+    expect(urlsRouteResponse.status).toBe(200);
+    expect(urlsRouteResponse.body.urls).toBeDefined();
+    expect(urlsRouteResponse.body.urls.length).toBe(1);
   });
 });
 
@@ -458,10 +584,23 @@ describe("Url shortener passsword tests", () => {
   it("should require password for protected short code", async () => {
     const originalUrl = generateRandomUrl();
 
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+      },
+    });
+
+    expect(testUser).toBeDefined();
+
     const shortenRouteResponse = await request(app)
       .post("/shorten")
       .send({ original_url: originalUrl, password: "password" })
-      .set("Accept", "application/json");
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
 
     expect(shortenRouteResponse.status).toBe(201);
     expect(shortenRouteResponse.body.short_code).toBeDefined();
@@ -476,10 +615,24 @@ describe("Url shortener passsword tests", () => {
   it("should not redirect for incorrect password", async () => {
     const originalUrl = generateRandomUrl();
     const password = "password";
+
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+      },
+    });
+
+    expect(testUser).toBeDefined();
+
     const shortenRouteResponse = await request(app)
       .post("/shorten")
       .send({ original_url: originalUrl, password: password })
-      .set("Accept", "application/json");
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
 
     expect(shortenRouteResponse.status).toBe(201);
     expect(shortenRouteResponse.body.short_code).toBeDefined();
