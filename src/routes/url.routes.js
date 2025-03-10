@@ -29,7 +29,7 @@ router.post(
   batchShorten
 );
 
-router.get("/redirect", blacklistMiddleware, redirect);
-router.get("/health", blacklistMiddleware, health);
+router.get("/redirect", redirect);
+router.get("/health", health);
 
 export default router;

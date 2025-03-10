@@ -16,7 +16,7 @@ export default async function update(req, res) {
     });
   }
 
-  if (!original_url && !expiry_date && !custom_code && !undelete && !password) {
+  if (!original_url && !expiry_date && !custom_code && !undelete) {
     return res.status(400).json({
       error: "No update provided",
     });
@@ -32,6 +32,12 @@ export default async function update(req, res) {
     if (req.user === undefined || req.user.id !== url.userId) {
       return res.status(403).json({
         error: "You do not have permission to update this URL",
+      });
+    }
+
+    if (url.password && password !== url.password) {
+      return res.status(403).json({
+        error: "Invalid password",
       });
     }
 
@@ -54,9 +60,9 @@ export default async function update(req, res) {
     if (undelete) {
       updateData.deletedAt = null;
     }
-    if (password) {
-      updateData.password = password;
-    }
+    // if (password) {
+    //   updateData.password = password;
+    // }
     await UrlService.update(short_code, updateData);
 
     return res.status(200).json({
