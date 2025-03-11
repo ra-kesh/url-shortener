@@ -1,6 +1,10 @@
 import { UrlService } from "../services/url.service.js";
 
-export const cache = new Map();
+import Redis from "ioredis";
+
+const redisClient = new Redis(
+  process.env.REDIS_URL || "redis://localhost:6379"
+);
 
 export default async function redirect(req, res) {
   const { code, password } = req.query;
@@ -12,18 +16,11 @@ export default async function redirect(req, res) {
   }
 
   try {
-    // Check the cache first
-    if (cache.has(code)) {
-      const cachedUrl = cache.get(code);
+    const cachedUrl = await redisClient.get(code);
 
-      try {
-        await UrlService.updateClickCount(code);
-      } catch (error) {
-        console.error("Error updating click count:", error);
-      }
-
-      res.setHeader("Cache-Control", "public, max-age=604800");
-
+    if (cachedUrl) {
+      await UrlService.updateClickCount(code);
+      console.log("Cache hit");
       return res.redirect(cachedUrl);
     }
 
@@ -50,7 +47,9 @@ export default async function redirect(req, res) {
 
     await UrlService.updateClickCount(code);
 
-    cache.set(code, url.originalUrl);
+    await redisClient.set(code, url.originalUrl);
+
+    res.setHeader("Cache-Control", "public, max-age=604800");
 
     return res.redirect(url.originalUrl);
   } catch (error) {
