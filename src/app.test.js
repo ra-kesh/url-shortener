@@ -3,6 +3,8 @@ import app from "./app.js";
 import { generateRandomUrl } from "./util.js";
 import { PrismaClient } from "@prisma/client";
 import { jest } from "@jest/globals";
+import { cache } from "./controllers/redirect.controller.js";
+import { UrlService } from "./services/url.service.js";
 
 const prisma = new PrismaClient();
 
@@ -706,5 +708,109 @@ describe("Url shortener cache tests", () => {
 
     // Restore the original implementation
     prisma.url.findUnique = originalFindUnique;
+  });
+});
+
+describe("url shortener redirect performance test", () => {
+  let shortCode;
+  let originalUrl;
+
+  it("should show perf difference between cache and no cache", async () => {
+    originalUrl = generateRandomUrl();
+
+    await prisma.url.deleteMany({
+      where: {
+        shortCode: "test",
+      },
+    });
+
+    const newUrl = await prisma.url.create({
+      data: {
+        originalUrl: originalUrl,
+        shortCode: "test",
+      },
+    });
+
+    shortCode = newUrl.shortCode;
+
+    expect(shortCode).toBeDefined();
+
+    cache.clear();
+
+    const initialResponse = await request(app).get(
+      `/redirect?code=${shortCode}`
+    );
+
+    expect(initialResponse.status).toBe(302);
+
+    const originalFindByShortCode = UrlService.findByShortCode;
+
+    let noCache_dbCalls = 0;
+
+    UrlService.findByShortCode = originalFindByShortCode;
+
+    UrlService.findByShortCode = jest.fn().mockImplementation(async (code) => {
+      noCache_dbCalls++;
+      return originalFindByShortCode(code);
+    });
+
+    const startTimeWithoutCache = Date.now();
+
+    for (let i = 0; i < 100; i++) {
+      try {
+        cache.clear();
+        const response = await request(app).get(`/redirect?code=${shortCode}`);
+        expect(response.status).toBe(302);
+      } catch (error) {
+        console.error(`Error in no-cache request ${i}:`, error.message);
+      }
+    }
+
+    const endTimeWithoutCache = Date.now();
+    const timeTakenWithoutCache = endTimeWithoutCache - startTimeWithoutCache;
+    console.log(`Time taken without cache: ${timeTakenWithoutCache}ms`);
+
+    let withCache_dbCalls = 0;
+
+    UrlService.findByShortCode = jest.fn().mockImplementation(async (code) => {
+      withCache_dbCalls++;
+      return originalFindByShortCode(code);
+    });
+
+    cache.clear();
+    const startTimeWithCache = Date.now();
+
+    const preCacheResponse = await request(app).get(
+      `/redirect?code=${shortCode}`
+    );
+
+    expect(preCacheResponse.status).toBe(302);
+    expect(cache.has(shortCode)).toBe(true);
+    expect(cache.get(shortCode)).toBe(originalUrl);
+
+    for (let i = 0; i < 100; i++) {
+      try {
+        const response = await request(app).get(`/redirect?code=${shortCode}`);
+        expect(response.status).toBe(302);
+        expect(cache.has(shortCode)).toBe(true);
+        expect(cache.get(shortCode)).toBe(originalUrl);
+      } catch (error) {
+        console.error(`Error in cache request ${i}:`, error.message);
+      }
+    }
+
+    const endTimeWithCache = Date.now();
+
+    const timeTakenWithCache = endTimeWithCache - startTimeWithCache;
+
+    console.log(`Time taken with cache: ${timeTakenWithCache}ms`);
+
+    const cacheHitCount = 100 - withCache_dbCalls;
+    const cacheMissCount = withCache_dbCalls;
+    const cacheHitRatio = cacheHitCount / (cacheHitCount + cacheMissCount);
+
+    UrlService.findByShortCode = originalFindByShortCode;
+
+    console.log(`cacheHitRatio: ${cacheHitRatio}`);
   });
 });

@@ -1,6 +1,6 @@
 import { UrlService } from "../services/url.service.js";
 
-const cache = new Map();
+export const cache = new Map();
 
 export default async function redirect(req, res) {
   const { code, password } = req.query;
