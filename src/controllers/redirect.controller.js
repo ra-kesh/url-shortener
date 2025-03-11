@@ -22,6 +22,8 @@ export default async function redirect(req, res) {
         console.error("Error updating click count:", error);
       }
 
+      res.setHeader("Cache-Control", "public, max-age=604800");
+
       return res.redirect(cachedUrl);
     }
 
