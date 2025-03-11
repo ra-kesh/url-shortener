@@ -1,10 +1,6 @@
 import { UrlService } from "../services/url.service.js";
 
-import Redis from "ioredis";
-
-const redisClient = new Redis(
-  process.env.REDIS_URL || "redis://localhost:6379"
-);
+import redisClient from "../config/redis.js";
 
 export default async function redirect(req, res) {
   const { code, password } = req.query;
