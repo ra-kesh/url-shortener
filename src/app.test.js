@@ -2,6 +2,7 @@ import request from "supertest";
 import app from "./app.js";
 import { generateRandomUrl } from "./util.js";
 import { PrismaClient } from "@prisma/client";
+import { jest } from "@jest/globals";
 
 const prisma = new PrismaClient();
 
@@ -642,5 +643,68 @@ describe("Url shortener passsword tests", () => {
     );
     expect(redirectRouteResponse.status).toBe(403);
     expect(redirectRouteResponse.text).toBe("Invalid password");
+  });
+});
+
+describe("Url shortener cache tests", () => {
+  it("should cache the url", async () => {
+    const originalUrl = generateRandomUrl();
+    const testUser = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email: "test@example.com",
+        apiKey: "test-api-key",
+      },
+    });
+    expect(testUser).toBeDefined();
+
+    const shortenRouteResponse = await request(app)
+      .post("/shorten")
+      .send({ original_url: originalUrl })
+      .set({
+        Authorization: "Bearer test-api-key",
+        Accept: "application/json",
+      });
+    expect(shortenRouteResponse.status).toBe(201);
+
+    const shortCode = shortenRouteResponse.body.short_code;
+
+    // Store the original implementation
+    const originalFindUnique = prisma.url.findUnique;
+
+    // First request to populate the cache
+    const redirectRouteResponse = await request(app).get(
+      `/redirect?code=${shortCode}`
+    );
+    expect(redirectRouteResponse.status).toBe(302);
+    expect(redirectRouteResponse.headers.location).toBe(originalUrl);
+
+    // Mock the database call
+    prisma.url.findUnique = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        id: 1,
+        shortCode: shortCode,
+        originalUrl: originalUrl,
+        clickCount: 1,
+        userId: testUser.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        expiryDate: null,
+        password: null,
+      });
+    });
+
+    // Second request should use cache
+    const redirectRouteResponse2 = await request(app).get(
+      `/redirect?code=${shortCode}`
+    );
+    expect(redirectRouteResponse2.status).toBe(302);
+    expect(redirectRouteResponse2.headers.location).toBe(originalUrl);
+
+    // Verify the mock wasn't called (cache hit)
+    expect(prisma.url.findUnique).not.toHaveBeenCalled();
+
+    // Restore the original implementation
+    prisma.url.findUnique = originalFindUnique;
   });
 });

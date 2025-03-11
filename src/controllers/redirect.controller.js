@@ -1,5 +1,7 @@
 import { UrlService } from "../services/url.service.js";
 
+const cache = new Map();
+
 export default async function redirect(req, res) {
   const { code, password } = req.query;
 
@@ -10,6 +12,20 @@ export default async function redirect(req, res) {
   }
 
   try {
+    // Check the cache first
+    if (cache.has(code)) {
+      const cachedUrl = cache.get(code);
+
+      try {
+        await UrlService.updateClickCount(code);
+      } catch (error) {
+        console.error("Error updating click count:", error);
+      }
+
+      return res.redirect(cachedUrl);
+    }
+
+    // Only query the database if not in cache
     const url = await UrlService.findByShortCode(code);
 
     if (!url || url.deletedAt) {
@@ -32,7 +48,9 @@ export default async function redirect(req, res) {
 
     await UrlService.updateClickCount(code);
 
-    res.redirect(url.originalUrl);
+    cache.set(code, url.originalUrl);
+
+    return res.redirect(url.originalUrl);
   } catch (error) {
     return res.status(500).json({
       error: error.message,
