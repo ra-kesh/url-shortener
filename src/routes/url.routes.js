@@ -11,10 +11,17 @@ import { health } from "../controllers/health.controller.js";
 import apiValidationMiddleware from "../middleware/api-validation.middlware.js";
 import enterpriseValidationMiddleware from "../middleware/enterprise.middleware.js";
 import blacklistMiddleware from "../middleware/blacklist.middleware.js";
+import apiRateLimitMiddleware from "../middleware/api-rate-limit.middleware.js";
 
 const router = express.Router();
 
-router.post("/shorten", blacklistMiddleware, apiValidationMiddleware, shorten);
+router.post(
+  "/shorten",
+  blacklistMiddleware,
+  apiValidationMiddleware,
+  apiRateLimitMiddleware,
+  shorten
+);
 router.get("/urls", blacklistMiddleware, apiValidationMiddleware, urls);
 router.delete(
   "/delete",
@@ -36,7 +43,7 @@ router.post(
   batchShorten
 );
 
-router.get("/redirect", redirect);
+router.get("/redirect", apiRateLimitMiddleware, redirect);
 router.get("/health", health);
 
 export default router;

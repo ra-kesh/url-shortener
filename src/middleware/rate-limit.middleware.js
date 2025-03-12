@@ -1,6 +1,12 @@
 import redisClient from "../config/redis.js";
 
+const EXCLUDED_ROUTES = ["/shorten", "/redirect"];
+
 export default async function rateLimitMiddleware(req, res, next) {
+  if (EXCLUDED_ROUTES.includes(req.path)) {
+    return next();
+  }
+
   const clientIp = req.ip;
 
   try {

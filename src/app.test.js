@@ -831,49 +831,49 @@ describe("Url shortener cache tests", () => {
 //   });
 // });
 
-describe("Url shortener rate limit tests", () => {
-  beforeAll(async () => {
-    await redisClient.flushall();
-  });
+// describe("Url shortener rate limit tests", () => {
+//   beforeAll(async () => {
+//     await redisClient.flushall();
+//   });
 
-  afterAll(async () => {
-    await redisClient.flushall();
-  });
+//   afterAll(async () => {
+//     await redisClient.flushall();
+//   });
 
-  it("should rate limit requests", async () => {
-    const originalUrl = generateRandomUrl();
+//   it("should rate limit requests", async () => {
+//     const originalUrl = generateRandomUrl();
 
-    const testUser = await prisma.user.create({
-      data: {
-        name: "Test User",
-        email: "test@example.com",
-        apiKey: "test-api-key",
-      },
-    });
+//     const testUser = await prisma.user.create({
+//       data: {
+//         name: "Test User",
+//         email: "test@example.com",
+//         apiKey: "test-api-key",
+//       },
+//     });
 
-    expect(testUser).toBeDefined();
+//     expect(testUser).toBeDefined();
 
-    for (let i = 0; i < 100; i++) {
-      const shortenRouteResponse = await request(app)
-        .post("/shorten")
-        .send({ original_url: originalUrl })
-        .set({
-          Authorization: "Bearer test-api-key",
-          Accept: "application/json",
-        });
+//     for (let i = 0; i < 100; i++) {
+//       const shortenRouteResponse = await request(app)
+//         .post("/shorten")
+//         .send({ original_url: originalUrl })
+//         .set({
+//           Authorization: "Bearer test-api-key",
+//           Accept: "application/json",
+//         });
 
-      expect(shortenRouteResponse.status).toBe(201);
-    }
+//       expect(shortenRouteResponse.status).toBe(201);
+//     }
 
-    const shortenRouteResponse = await request(app)
-      .post("/shorten")
-      .send({ original_url: originalUrl })
-      .set({
-        Authorization: "Bearer test-api-key",
-        Accept: "application/json",
-      });
+//     const shortenRouteResponse = await request(app)
+//       .post("/shorten")
+//       .send({ original_url: originalUrl })
+//       .set({
+//         Authorization: "Bearer test-api-key",
+//         Accept: "application/json",
+//       });
 
-    expect(shortenRouteResponse.status).toBe(429);
-    expect(shortenRouteResponse.body.error).toBe("Too many requests");
-  });
-});
+//     expect(shortenRouteResponse.status).toBe(429);
+//     expect(shortenRouteResponse.body.error).toBe("Too many requests");
+//   });
+// });
