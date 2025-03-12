@@ -11,7 +11,7 @@ export default async function blacklistMiddleware(req, res, next) {
   res.send = function (...args) {
     const endTime = Date.now();
     const elaspsedTime = endTime - startTime;
-    console.log(`Response time: ${elaspsedTime}ms`);
+    // console.log(`Response time: ${elaspsedTime}ms`);
     res.setHeader("X-Processing-Time", `${elaspsedTime}ms`);
     return originalSend.apply(this, args);
   };

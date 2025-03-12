@@ -1,5 +1,7 @@
 import { UrlService } from "../services/url.service.js";
 
+import redisClient from "../config/redis.js";
+
 export default async function redirect(req, res) {
   const { code, password } = req.query;
 
@@ -10,6 +12,15 @@ export default async function redirect(req, res) {
   }
 
   try {
+    const cachedUrl = await redisClient.get(code);
+
+    if (cachedUrl) {
+      await UrlService.updateClickCount(code);
+      console.log("Cache hit");
+      return res.redirect(cachedUrl);
+    }
+
+    // Only query the database if not in cache
     const url = await UrlService.findByShortCode(code);
 
     if (!url || url.deletedAt) {
@@ -32,7 +43,11 @@ export default async function redirect(req, res) {
 
     await UrlService.updateClickCount(code);
 
-    res.redirect(url.originalUrl);
+    await redisClient.set(code, url.originalUrl);
+
+    res.setHeader("Cache-Control", "public, max-age=604800");
+
+    return res.redirect(url.originalUrl);
   } catch (error) {
     return res.status(500).json({
       error: error.message,
