@@ -1,4 +1,5 @@
 import { UrlService } from "../services/url.service.js";
+import redisClient from "../config/redis.js";
 
 export default async function edit(req, res) {
   const { short_code } = req.params;
@@ -30,9 +31,20 @@ export default async function edit(req, res) {
       });
     }
 
+    const isNewShortCodeTaken = await UrlService.findByShortCode(
+      new_short_code
+    );
+
+    if (isNewShortCodeTaken) {
+      throw new Error("This short code is already taken");
+    }
+
     await UrlService.update(short_code, {
       shortCode: new_short_code,
     });
+
+    await redisClient.del(short_code);
+    await redisClient.set(new_short_code, url.originalUrl);
 
     return res.status(200).json({
       message: "URL updated successfully",
