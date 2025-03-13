@@ -19,6 +19,7 @@ export class UrlService {
     return await prisma.url.findUnique({
       where: {
         originalUrl: originalUrl,
+        deletedAt: null,
       },
     });
   }
@@ -27,6 +28,7 @@ export class UrlService {
     return await prisma.url.findUnique({
       where: {
         shortCode: shortCode,
+        deletedAt: null,
       },
     });
   }
@@ -73,6 +75,7 @@ export class UrlService {
     return await prisma.url.update({
       where: {
         shortCode: shortCode,
+        deletedAt: null,
       },
       data: updateData,
     });
@@ -112,15 +115,28 @@ export class UrlService {
     return user;
   }
 
-  static async findUserWithUrlsById(userId) {
-    const user = await prisma.user.findUnique({
+  static async findUrlsbyUserId(userId, offset, limit, sortBy, sortOrder) {
+    const urls = await prisma.url.findMany({
+      skip: offset,
+      take: limit,
       where: {
-        id: userId,
+        userId: userId,
+        deletedAt: null,
       },
-      include: {
-        urls: true,
+      orderBy: {
+        [sortBy]: sortOrder,
       },
     });
-    return user;
+    return urls;
+  }
+
+  static async countUrlsByUserId(userId) {
+    const count = await prisma.url.count({
+      where: {
+        userId: userId,
+        deletedAt: null,
+      },
+    });
+    return count;
   }
 }
